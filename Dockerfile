@@ -1,0 +1,34 @@
+# https://github.com/ziglang/docker-zig/blob/master/Dockerfile
+
+FROM alpine as builder
+
+RUN apk update && \
+    apk add \
+        curl \
+        xz
+
+ARG ZIGVER
+RUN mkdir -p /deps
+WORKDIR /deps
+RUN curl https://ziglang.org/builds/zig-linux-aarch64-$ZIGVER.tar.xz -O && \
+    tar xf zig-linux-aarch64-$ZIGVER.tar.xz && \
+    mv zig-linux-aarch64-$ZIGVER/ local/
+
+# RUN curl https://ziglang.org/deps/zig+llvm+lld+clang-$(uname -m)-linux-musl-$ZIGVER.tar.xz  -O && \
+#     tar xf zig+llvm+lld+clang-$(uname -m)-linux-musl-$ZIGVER.tar.xz && \
+#     mv zig+llvm+lld+clang-$(uname -m)-linux-musl-$ZIGVER/ local/
+    
+FROM alpine
+RUN apk --no-cache add \
+      libc-dev \
+      xz \
+      samurai \
+      git \
+      cmake \
+      py3-pip \
+      perl-utils \
+      jq \
+      curl && \
+    pip3 install s3cmd
+
+COPY --from=builder /deps/local/ /deps/local/
